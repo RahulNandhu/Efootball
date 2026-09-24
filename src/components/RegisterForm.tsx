@@ -77,18 +77,35 @@ export default function RegisterForm() {
       </div>
       <div>
         <label className="label">Profile photo (required)</label>
-        <div className="flex items-center gap-3">
+        <label
+          htmlFor="photo-upload"
+          className="group relative flex flex-col items-center justify-center w-28 h-28 rounded-2xl border-2 border-dashed cursor-pointer overflow-hidden transition-colors hover:border-[var(--brand)]"
+          style={{ borderColor: preview ? "transparent" : "var(--border)", background: "var(--surface-muted)" }}
+        >
           {preview ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={preview} alt="Preview" className="avatar w-14 h-14" />
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+              <div className="absolute inset-0 flex items-center justify-center bg-black/0 text-transparent group-hover:bg-black/50 group-hover:text-white text-xs font-semibold transition-colors">
+                Change photo
+              </div>
+            </>
           ) : (
-            <div className="avatar w-14 h-14 flex items-center justify-center text-xl" style={{ background: "var(--surface-muted)" }}>
-              🎽
+            <div className="flex flex-col items-center gap-1 text-center px-2">
+              <span className="text-2xl">📷</span>
+              <span className="text-xs font-semibold text-[var(--brand)]">Click to upload</span>
             </div>
           )}
-          <input type="file" accept="image/*" onChange={onPhotoChange} required className="text-sm" />
-        </div>
-        <p className="text-xs text-[var(--muted)] mt-1">Automatically compressed to under 100KB after upload.</p>
+          <input
+            id="photo-upload"
+            type="file"
+            accept="image/*"
+            onChange={onPhotoChange}
+            required
+            className="sr-only"
+          />
+        </label>
+        <p className="text-xs text-[var(--muted)] mt-2">Automatically compressed to under 100KB after upload.</p>
       </div>
 
       {error && <p className="text-sm text-[var(--loss)]">{error}</p>}
