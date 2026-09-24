@@ -1,0 +1,144 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum MatchStatus {
+  SCHEDULED
+  PENDING_APPROVAL
+  APPROVED
+}
+
+enum LegType {
+  SINGLE
+  DOUBLE
+}
+
+enum KnockoutFormat {
+  NONE
+  FINAL
+  SEMI_FINAL
+}
+
+enum MatchStage {
+  GROUP
+  SEMI_FINAL
+  THIRD_PLACE
+  FINAL
+}
+
+model User {
+  id             String   @id @default(cuid())
+  username       String   @unique
+  passwordHash   String
+  role           Role     @default(USER)
+  teamName       String
+  photoUrl       String
+  isDefaultAdmin Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  createdTournaments Tournament[]      @relation("TournamentCreator")
+  entries            TournamentEntry[]
+  homeMatches        Match[]           @relation("HomeUser")
+  awayMatches        Match[]           @relation("AwayUser")
+  resultsSubmitted   Match[]           @relation("ResultSubmittedBy")
+  resultsApproved    Match[]           @relation("ResultApprovedBy")
+}
+
+model Tournament {
+  id          String   @id @default(cuid())
+  name        String
+  createdAt   DateTime @default(now())
+  createdById String
+  createdBy   User     @relation("TournamentCreator", fields: [createdById], references: [id])
+
+  legType        LegType        @default(SINGLE)
+  groupCount     Int            @default(1)
+  startDate      DateTime       @default(now())
+  knockoutFormat KnockoutFormat @default(NONE)
+  hasThirdPlace  Boolean        @default(false)
+
+  entries TournamentEntry[]
+  matches Match[]
+  groups  Group[]
+}
+
+model Group {
+  id           String     @id @default(cuid())
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  name         String
+
+  entries TournamentEntry[]
+  matches Match[]
+
+  @@index([tournamentId])
+}
+
+// A registered user's participation as a "team" within one tournament
+model TournamentEntry {
+  id           String     @id @default(cuid())
+  tournamentId String
+  userId       String
+  groupId      String?
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  user         User       @relation(fields: [userId], references: [id])
+  group        Group?     @relation(fields: [groupId], references: [id])
+
+  @@unique([tournamentId, userId])
+}
+
+model Match {
+  id           String     @id @default(cuid())
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+
+  groupId String?
+  group   Group?  @relation(fields: [groupId], references: [id])
+
+  stage MatchStage @default(GROUP)
+  round Int        @default(1)
+  // Distinguishes the two semi-finals (1 or 2); unused for other stages.
+  slot  Int?
+
+  homeUserId String
+  awayUserId String
+  homeUser   User   @relation("HomeUser", fields: [homeUserId], references: [id])
+  awayUser   User   @relation("AwayUser", fields: [awayUserId], references: [id])
+
+  homeScore Int?
+  awayScore Int?
+
+  status MatchStatus @default(SCHEDULED)
+
+  // The result currently awaiting admin approval (kept separate from the approved score)
+  pendingHomeScore Int?
+  pendingAwayScore Int?
+
+  submittedById String?
+  submittedBy   User?   @relation("ResultSubmittedBy", fields: [submittedById], references: [id])
+
+  approvedById String?
+  approvedBy   User?   @relation("ResultApprovedBy", fields: [approvedById], references: [id])
+
+  scheduledDate DateTime?
+  playedAt      DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([tournamentId])
+  @@index([groupId])
+}
