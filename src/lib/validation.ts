@@ -33,6 +33,10 @@ export const createTournamentSchema = z
     path: ["knockoutFormat"],
   });
 
+export const renameTournamentSchema = z.object({
+  name: z.string().trim().min(2, "Tournament name is required").max(80),
+});
+
 export const submitResultSchema = z.object({
   homeScore: z.coerce.number().int().min(0).max(99),
   awayScore: z.coerce.number().int().min(0).max(99),

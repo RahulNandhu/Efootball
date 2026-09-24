@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
@@ -5,6 +6,7 @@ import { computeStandings } from "@/lib/standings";
 import StandingsTable from "@/components/StandingsTable";
 import MatchRow, { type MatchRowData } from "@/components/MatchRow";
 import AdvanceButton from "@/components/AdvanceButton";
+import DeleteTournamentButton from "@/components/DeleteTournamentButton";
 
 const STAGE_LABEL: Record<string, string> = {
   SEMI_FINAL: "Semi-final",
@@ -99,13 +101,24 @@ export default async function TournamentPage({
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="page-title">{tournament.name}</h1>
-        <div className="flex flex-wrap gap-2 mt-2">
-          <span className="badge badge-brand">{formatLabel}</span>
-          {hasGroups && <span className="badge badge-brand">{tournament.groups.length} groups</span>}
-          {knockoutLabel && <span className="badge badge-brand">{knockoutLabel}</span>}
+      <div className="flex items-start justify-between flex-wrap gap-3">
+        <div>
+          <h1 className="page-title">{tournament.name}</h1>
+          <div className="flex flex-wrap gap-2 mt-2">
+            <span className="badge badge-brand">{formatLabel}</span>
+            {hasGroups && <span className="badge badge-brand">{tournament.groups.length} groups</span>}
+            {knockoutLabel && <span className="badge badge-brand">{knockoutLabel}</span>}
+          </div>
         </div>
+
+        {isAdmin && (
+          <div className="flex items-center gap-2">
+            <Link href={`/tournaments/${id}/edit`} className="btn btn-secondary btn-sm">
+              Edit
+            </Link>
+            <DeleteTournamentButton tournamentId={id} tournamentName={tournament.name} />
+          </div>
+        )}
       </div>
 
       {sections.map((section) => (

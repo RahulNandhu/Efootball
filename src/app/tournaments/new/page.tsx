@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import CreateTournamentForm from "@/components/CreateTournamentForm";
+import TournamentForm from "@/components/TournamentForm";
 
 export default async function NewTournamentPage() {
   const session = await auth();
@@ -10,7 +10,7 @@ export default async function NewTournamentPage() {
   return (
     <div>
       <h1 className="page-title mb-6">New tournament</h1>
-      <CreateTournamentForm />
+      <TournamentForm mode="create" />
     </div>
   );
 }
