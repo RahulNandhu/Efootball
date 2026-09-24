@@ -2,10 +2,9 @@
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 export default function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -30,8 +29,11 @@ export default function LoginForm() {
       return;
     }
 
-    router.push(searchParams.get("callbackUrl") || "/");
-    router.refresh();
+    // Full navigation (not router.push + router.refresh) — avoids a race where
+    // refresh() re-fetches the still-current /login route before the push to
+    // the destination has committed client-side, leaving the user stuck on
+    // /login even though the session cookie was already set.
+    window.location.href = searchParams.get("callbackUrl") || "/";
   }
 
   return (
