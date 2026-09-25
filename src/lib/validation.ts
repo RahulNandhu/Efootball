@@ -49,3 +49,7 @@ export const reviewResultSchema = z.object({
 export const setRoleSchema = z.object({
   role: z.enum(["ADMIN", "USER"]),
 });
+
+export const resetPasswordSchema = z.object({
+  newPassword: z.string().min(6, "Password must be at least 6 characters"),
+});
