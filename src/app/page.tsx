@@ -3,6 +3,7 @@ import Image from "next/image";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getUpcomingMatches, getRecentResults } from "@/lib/myMatches";
+import { getTournamentStatus, type TournamentStatus } from "@/lib/tournamentStatus";
 
 function StageBadge({ stage }: { stage: string }) {
   if (stage === "GROUP") return null;
@@ -24,6 +25,11 @@ export default async function HomePage() {
     getUpcomingMatches(userId, 5),
     getRecentResults(userId, 5),
   ]);
+
+  const statuses = await Promise.all(tournaments.map((t) => getTournamentStatus(t)));
+  const tournamentsWithStatus = tournaments.map((t, i) => ({ ...t, status: statuses[i] }));
+  const ongoingTournaments = tournamentsWithStatus.filter((t) => !t.status.finished);
+  const finishedTournaments = tournamentsWithStatus.filter((t) => t.status.finished);
 
   return (
     <div className="space-y-10">
@@ -129,20 +135,61 @@ export default async function HomePage() {
         {tournaments.length === 0 ? (
           <p className="text-sm text-[var(--muted)]">No tournaments yet.</p>
         ) : (
-          <ul className="grid sm:grid-cols-2 gap-3">
-            {tournaments.map((t) => (
-              <li key={t.id}>
-                <Link href={`/tournaments/${t.id}`} className="card card-hover block p-4">
-                  <div className="font-semibold">{t.name}</div>
-                  <div className="text-sm text-[var(--muted)]">
-                    {t._count.entries} teams · {t._count.matches} matches
-                  </div>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <div className="space-y-6">
+            {ongoingTournaments.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+                  Ongoing
+                </h3>
+                <TournamentGrid tournaments={ongoingTournaments} />
+              </div>
+            )}
+
+            {finishedTournaments.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+                  Finished
+                </h3>
+                <TournamentGrid tournaments={finishedTournaments} />
+              </div>
+            )}
+          </div>
         )}
       </section>
     </div>
+  );
+}
+
+function TournamentGrid({
+  tournaments,
+}: {
+  tournaments: {
+    id: string;
+    name: string;
+    status: TournamentStatus;
+    _count: { entries: number; matches: number };
+  }[];
+}) {
+  return (
+    <ul className="grid sm:grid-cols-2 gap-3">
+      {tournaments.map((t) => (
+        <li key={t.id}>
+          <Link href={`/tournaments/${t.id}`} className="card card-hover block p-4">
+            <div className="flex items-center justify-between gap-2">
+              <div className="font-semibold">{t.name}</div>
+              {t.status.finished && <span className="badge badge-win shrink-0">Finished</span>}
+            </div>
+            <div className="text-sm text-[var(--muted)]">
+              {t._count.entries} teams · {t._count.matches} matches
+            </div>
+            {t.status.championTeamName && (
+              <div className="text-sm font-medium mt-1" style={{ color: "var(--pending)" }}>
+                🏆 {t.status.championTeamName}
+              </div>
+            )}
+          </Link>
+        </li>
+      ))}
+    </ul>
   );
 }
