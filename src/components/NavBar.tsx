@@ -1,17 +1,27 @@
 import Link from "next/link";
 import Image from "next/image";
 import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
 import SignOutButton from "@/components/SignOutButton";
 import MobileMenu from "@/components/MobileMenu";
 
 export default async function NavBar() {
   const session = await auth();
-  const user = session?.user;
+  // Read the display fields fresh from the DB rather than trusting the JWT
+  // claim — otherwise a profile photo change wouldn't show up in the nav
+  // until the next login.
+  const user = session?.user
+    ? await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { teamName: true, photoUrl: true, role: true },
+      })
+    : null;
 
   const links = user
     ? [
         { href: "/", label: "Home" },
         { href: "/compare", label: "Compare" },
+        { href: "/profile", label: "Profile" },
         ...(user.role === "ADMIN"
           ? [
               { href: "/admin/approvals", label: "Approvals" },

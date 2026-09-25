@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import RoleToggle from "@/components/RoleToggle";
+import DeleteUserButton from "@/components/DeleteUserButton";
 
 export default async function AdminUsersPage() {
   const session = await auth();
@@ -10,6 +11,7 @@ export default async function AdminUsersPage() {
   if (session.user.role !== "ADMIN") redirect("/");
 
   const users = await prisma.user.findMany({ orderBy: { createdAt: "asc" } });
+  const canDelete = session.user.isDefaultAdmin;
 
   return (
     <div>
@@ -41,7 +43,10 @@ export default async function AdminUsersPage() {
             {u.isDefaultAdmin ? (
               <span className="badge badge-draw">Protected</span>
             ) : (
-              <RoleToggle userId={u.id} role={u.role} />
+              <div className="flex items-center gap-2">
+                <RoleToggle userId={u.id} role={u.role} />
+                {canDelete && <DeleteUserButton userId={u.id} teamName={u.teamName} />}
+              </div>
             )}
           </li>
         ))}

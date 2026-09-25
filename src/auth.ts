@@ -31,6 +31,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           role: user.role,
           teamName: user.teamName,
           photoUrl: user.photoUrl,
+          isDefaultAdmin: user.isDefaultAdmin,
         };
       },
     }),
@@ -42,6 +43,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.role = user.role;
         token.teamName = user.teamName;
         token.photoUrl = user.photoUrl;
+        token.isDefaultAdmin = user.isDefaultAdmin;
       }
       return token;
     },
@@ -51,6 +53,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.role = token.role as "ADMIN" | "USER";
         session.user.teamName = token.teamName as string;
         session.user.photoUrl = token.photoUrl as string;
+        session.user.isDefaultAdmin = token.isDefaultAdmin as boolean;
       }
       return session;
     },

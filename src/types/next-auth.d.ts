@@ -5,6 +5,7 @@ declare module "next-auth" {
     role: "ADMIN" | "USER";
     teamName: string;
     photoUrl: string;
+    isDefaultAdmin: boolean;
   }
 
   interface Session {
@@ -13,6 +14,7 @@ declare module "next-auth" {
       role: "ADMIN" | "USER";
       teamName: string;
       photoUrl: string;
+      isDefaultAdmin: boolean;
     } & DefaultSession["user"];
   }
 }
@@ -23,5 +25,6 @@ declare module "next-auth/jwt" {
     role: "ADMIN" | "USER";
     teamName: string;
     photoUrl: string;
+    isDefaultAdmin: boolean;
   }
 }
